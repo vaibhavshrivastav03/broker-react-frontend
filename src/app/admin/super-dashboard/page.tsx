@@ -175,6 +175,19 @@ export default function SuperAdminDashboardPage() {
     loadAdmins();
   }
 
+  async function toggleFeatured(id: number, is_featured: boolean) {
+    await api.patch(`/super-admin/vessels/${id}/feature`, {
+      is_featured: !is_featured,
+    });
+
+    setBoats((prev) =>
+      prev.map((b) =>
+        b.id === id ? { ...b, is_featured: !b.is_featured } : b
+      )
+    );
+  }
+
+
   async function approveBroker(id: number) {
     await api.post(`/super-admin/brokers/${id}/approve`);
     setPendingBrokers(p => p.filter(b => b.id !== id));
@@ -343,13 +356,11 @@ export default function SuperAdminDashboardPage() {
                       <TableCell>
                         <Button
                           size="sm"
-                          variant={b.flag === "featured" ? "default" : "outline"}
-                          onClick={() => toggleFeatured(b.id, b.flag)}
+                          variant={b.is_featured ? "default" : "outline"}
+                          onClick={() => toggleFeatured(b.id, b.is_featured)}
                         >
                           <Star
-                            className={`h-4 w-4 ${
-                              b.flag === "featured" ? "fill-current" : ""
-                            }`}
+                            className={`h-4 w-4 ${b.is_featured ? "fill-current" : ""}`}
                           />
                         </Button>
                       </TableCell>

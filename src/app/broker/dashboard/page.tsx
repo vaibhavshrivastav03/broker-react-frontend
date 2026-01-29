@@ -171,6 +171,8 @@ const EMPTY_FORM = {
   jacuzzi: false,
   tender: "",
 
+  is_featured:false,
+
   /* ================= MEDIA ================= */
   pdf_brochure: "",
 };
@@ -283,6 +285,7 @@ async function handleSubmitListing() {
   fd.append("display_length_feet", formData.display_length_feet || "");
   fd.append("display_length_meters", formData.display_length_meters || "");
   fd.append("draft_max_feet", formData.draft_max_feet || "");
+  fd.append("draft_min_meters", formData.draft_min_meters || "");
   fd.append("draft_max_meters", formData.draft_max_meters || "");
   fd.append("displacement2", formData.displacement2 || "");
 
@@ -342,6 +345,7 @@ async function handleSubmitListing() {
   fd.append("jacuzzi", String(formData.jacuzzi || false));
   fd.append("tender", formData.tender || "");
 
+  fd.append("is_featured", String(formData.is_featured || false));
   /* ================= MEDIA ================= */
   if(pdfBrochure){
     fd.append("pdf_brochure", pdfBrochure);
@@ -462,6 +466,7 @@ async function editListing(id: number) {
       display_length_feet: data.display_length_feet || "",
       display_length_meters: data.display_length_meters || "",
       draft_max_feet: data.draft_max_feet || "",
+      draft_min_meters: data.draft_min_meters || "",
       draft_max_meters: data.draft_max_meters || "",
       displacement2: data.displacement2 || "",
 
@@ -514,6 +519,8 @@ async function editListing(id: number) {
       toys_included: data.toys_included || "",
       jacuzzi: data.jacuzzi || false,
       tender: data.tender || "",
+      
+      is_featured: data.is_featured || false,
 
     });
 
@@ -737,11 +744,14 @@ async function deleteListing(id: number) {
                   <Input type="number" placeholder="Display Length (m)" value={formData.display_length_meters}
                     onChange={e => setFormData({ ...formData, display_length_meters: e.target.value })} />
 
-                  <Input type="number" placeholder="Draft (ft)" value={formData.draft_min_feet}
+                  <Input type="number" placeholder="Draft Min (ft)" value={formData.draft_min_feet}
                     onChange={e => setFormData({ ...formData, draft_min_feet: e.target.value })} />
 
                   <Input type="number" placeholder="Draft Max (ft)" value={formData.draft_max_feet}
                   onChange={e => setFormData({ ...formData, draft_max_feet: e.target.value })} />
+
+                  <Input type="number" placeholder="Draft Min (m)" value={formData.draft_min_meters}
+                  onChange={e => setFormData({ ...formData, draft_min_meters: e.target.value })} />
 
                   <Input type="number" placeholder="Draft Max (m)" value={formData.draft_max_meters}
                   onChange={e => setFormData({ ...formData, draft_max_meters: e.target.value })} />
@@ -799,8 +809,8 @@ async function deleteListing(id: number) {
                   <label className="flex items-center gap-2 sm:col-span-2">
                     <input
                       type="checkbox"
-                      checked={formData.featured}
-                      onChange={e => setFormData({ ...formData, featured: e.target.checked })}
+                      checked={formData.is_featured}
+                      onChange={e => setFormData({ ...formData, is_featured: e.target.checked })}
                     />
                     Featured Listing
                   </label>

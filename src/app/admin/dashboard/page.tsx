@@ -168,17 +168,18 @@ export default function AdminDashboardPage() {
     setPendingBoats(prev => prev.filter(v => v.id !== id));
   }
 
-  async function toggleFeatured(id: number, flag: string | null) {
+  async function toggleFeatured(id: number, is_featured: boolean) {
     await api.patch(`/admin/vessels/${id}/feature`, {
-      flag: flag === "featured" ? null : "featured",
+      is_featured: !is_featured,
     });
 
-    setBoats(prev =>
-      prev.map(b =>
-        b.id === id ? { ...b, flag: b.flag ? null : "featured" } : b
+    setBoats((prev) =>
+      prev.map((b) =>
+        b.id === id ? { ...b, is_featured: !b.is_featured } : b
       )
     );
   }
+
 
   async function deleteListing(id: number) {
     if (!confirm("Delete listing?")) return;
@@ -342,8 +343,14 @@ export default function AdminDashboardPage() {
               <TableCell>{b.broker_name}</TableCell>
               <TableCell><Badge>{b.status}</Badge></TableCell>
               <TableCell>
-                <Button size="sm" onClick={() => toggleFeatured(b.id, b.flag)}>
-                  <Star className={b.flag === "featured" ? "fill-current" : ""} />
+                <Button
+                  size="sm"
+                  variant={b.is_featured ? "default" : "outline"}
+                  onClick={() => toggleFeatured(b.id, b.is_featured)}
+                >
+                  <Star
+                    className={`h-4 w-4 ${b.is_featured ? "fill-current" : ""}`}
+                  />
                 </Button>
               </TableCell>
               <TableCell>
