@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, MapPin, Ruler, Calendar, Mail, Phone, Building, Anchor, Waves, Gauge, Users, Bed, Wrench, Palette, FileText, Ship, Zap } from "lucide-react";
 import { getBoatById } from "@/lib/api-client";
 import type { Boat } from "@/lib/types";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
+
 
 export default function BoatDetailsPage() {
   const params = useParams();
@@ -171,7 +173,12 @@ export default function BoatDetailsPage() {
                 <CardTitle>Description</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-700 leading-relaxed">{boat.description}</p>
+                <div
+                  className="prose prose-slate max-w-none"
+                  dangerouslySetInnerHTML={{
+                    __html: sanitizeHtml(boat.description),
+                  }}
+                />
               </CardContent>
             </Card>
 

@@ -6,7 +6,10 @@ export interface Boat {
   make: string;
   model: string;
   length_ft: number;
-  price_usd: number;
+  price_usd?: string | number;
+  price_eur?: string | number;
+  price_gbp?: string | number;
+  price_cad?: string | number;
   location: string;
   description: string;
   featured: boolean;
@@ -15,6 +18,7 @@ export interface Boat {
   updated_at: string;
   images: string[];
 }
+
 
 export interface Broker {
   broker_id: string;

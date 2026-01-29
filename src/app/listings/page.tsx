@@ -14,9 +14,15 @@ import { BoatCard } from "@/components/boat-card";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export default function ListingsPage() {
-  const [boats, setBoats] = useState<Boat[]>([]);
+  //const [boats, setBoats] = useState<Boat[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [boats, setBoats] = useState<any[]>([]);
+
 
   // Filters
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -28,27 +34,40 @@ export default function ListingsPage() {
 
   useEffect(() => {
     loadBoats();
-  }, [typeFilter, locationFilter, priceRange, lengthRange, featuredOnly]);
+  }, [typeFilter, locationFilter, priceRange, lengthRange, featuredOnly, page]);
 
-  async function loadBoats() {
-    setLoading(true);
-    try {
-      const data = await getBoats({
-        type: typeFilter !== "all" ? typeFilter : undefined,
-        location: locationFilter || undefined,
-        minPrice: priceRange[0],
-        maxPrice: priceRange[1],
-        minLength: lengthRange[0],
-        maxLength: lengthRange[1],
-        featured: featuredOnly || undefined,
-      });
-      setBoats(data);
-    } catch (error) {
-      console.error("Failed to load boats:", error);
-    } finally {
-      setLoading(false);
-    }
+ 
+async function loadBoats() {
+  setLoading(true);
+  try {
+    const res = await getBoats({
+      type: typeFilter !== "all" ? typeFilter : undefined,
+      location: locationFilter || undefined,
+
+      minPrice: priceRange[0] !== 0 ? priceRange[0] : undefined,
+      maxPrice: priceRange[1] !== 5000000 ? priceRange[1] : undefined,
+
+      minLength: lengthRange[0] !== 0 ? lengthRange[0] : undefined,
+      maxLength: lengthRange[1] !== 100 ? lengthRange[1] : undefined,
+
+      featured: featuredOnly ? true : undefined,
+      page,
+      limit: 12,
+    });
+
+    setBoats(res.data || []);
+    setTotalPages(res.totalPages || 1);
+  } catch (error) {
+    console.error("Failed to load boats:", error);
+    setBoats([]);
+  } finally {
+    setLoading(false);
   }
+}
+
+
+
+
 
   const sortedBoats = [...boats].sort((a, b) => {
     switch (sortBy) {
@@ -90,7 +109,7 @@ export default function ListingsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="catamaran">Catamaran</SelectItem>
+                      <SelectItem value="catamarans">Catamaran</SelectItem>
                       <SelectItem value="monohull">Monohull</SelectItem>
                       <SelectItem value="power">Power</SelectItem>
                     </SelectContent>
@@ -178,7 +197,7 @@ export default function ListingsPage() {
             {/* Controls */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <p className="text-sm text-slate-600">
-                {loading ? "Loading..." : `${sortedBoats.length} listing${sortedBoats.length !== 1 ? "s" : ""} found`}
+                {loading ? "Loading..." : `${sortedBoats.length} listings on this page`}
               </p>
 
               <div className="flex items-center gap-4">
@@ -234,6 +253,32 @@ export default function ListingsPage() {
                 ))}
               </div>
             )}
+
+            {/* ================= PAGINATION ================= */}
+            {!loading && sortedBoats.length > 0 && (
+              <div className="flex justify-center items-center gap-4 mt-10">
+                <Button
+                  variant="outline"
+                  disabled={page === 1}
+                  onClick={() => setPage(p => p - 1)}
+                >
+                  Previous
+                </Button>
+
+                <span className="text-sm text-slate-600">
+                  Page {page} of {totalPages}
+                </span>
+
+                <Button
+                  variant="outline"
+                  disabled={page === totalPages}
+                  onClick={() => setPage(p => p + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+
           </div>
         </div>
       </div>

@@ -1,11 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "export",
+ 
   allowedDevOrigins: ["*.preview.same-app.com"],
-
+ 
   eslint: {
     ignoreDuringBuilds: true,
   },
-
+ 
   images: {
     unoptimized: true,
     domains: [
@@ -18,25 +20,25 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "source.unsplash.com",
-        pathname: "/**",
+        pathname: "/*",
       },
       {
         protocol: "https",
         hostname: "images.unsplash.com",
-        pathname: "/**",
+        pathname: "/*",
       },
       {
         protocol: "https",
         hostname: "ext.same-assets.com",
-        pathname: "/**",
+        pathname: "/*",
       },
       {
         protocol: "https",
         hostname: "ugc.same-assets.com",
-        pathname: "/**",
+        pathname: "/*",
       },
     ],
   },
 };
-
+ 
 module.exports = nextConfig;

@@ -714,7 +714,7 @@ async function deleteListing(id: number) {
                   <Select value={formData.type} onValueChange={v => setFormData({ ...formData, type: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="catamaran">Catamaran</SelectItem>
+                      <SelectItem value="catamarans">Catamaran</SelectItem>
                       <SelectItem value="monohull">Monohull</SelectItem>
                       <SelectItem value="power">Power</SelectItem>
                     </SelectContent>

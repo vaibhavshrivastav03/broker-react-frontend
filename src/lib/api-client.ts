@@ -43,54 +43,51 @@ async function apiRequest<T>(
 // ============================================================================
 // BOATS API
 // ============================================================================
-
-export async function getBoats(filters?: {
+export async function getBoats(params: {
   type?: string;
+  location?: string;
   minPrice?: number;
   maxPrice?: number;
   minLength?: number;
   maxLength?: number;
-  location?: string;
   featured?: boolean;
-}): Promise<Boat[]> {
-  await delay(200);
+  page?: number;
+  limit?: number;
+}) {
+  const qs = new URLSearchParams();
 
-  let boats = [...(boatsData as Boat[])];
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      qs.append(key, String(value));
+    }
+  });
 
-  if (filters) {
-    if (filters.type && filters.type !== "all") {
-      boats = boats.filter((b) => b.type === filters.type);
-    }
-    if (filters.minPrice !== undefined) {
-      boats = boats.filter((b) => b.price_usd >= filters.minPrice!);
-    }
-    if (filters.maxPrice !== undefined) {
-      boats = boats.filter((b) => b.price_usd <= filters.maxPrice!);
-    }
-    if (filters.minLength !== undefined) {
-      boats = boats.filter((b) => b.length_ft >= filters.minLength!);
-    }
-    if (filters.maxLength !== undefined) {
-      boats = boats.filter((b) => b.length_ft <= filters.maxLength!);
-    }
-    if (filters.location) {
-      boats = boats.filter((b) =>
-        b.location.toLowerCase().includes(filters.location!.toLowerCase())
-      );
-    }
-    if (filters.featured !== undefined) {
-      boats = boats.filter((b) => b.featured === filters.featured);
-    }
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/public/listings?${qs.toString()}`,
+    { cache: "no-store" }
+  );
+
+  return await res.json(); // ✅ RETURN FULL OBJECT
+}
+
+
+
+
+export async function getBoatById(id: string) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/public/listings/${id}`,
+    { cache: "no-store" }
+  );
+
+  const json = await res.json();
+
+  if (!json.success) {
+    throw new Error(json.message || "Failed to load listing");
   }
 
-  return boats;
+  return json.data;
 }
 
-export async function getBoatById(id: string): Promise<Boat | null> {
-  await delay(150);
-  const boat = (boatsData as Boat[]).find((b) => b.id === id);
-  return boat || null;
-}
 
 export async function createBoat(boat: Omit<Boat, "id" | "updated_at">): Promise<Boat> {
   await delay(300);
