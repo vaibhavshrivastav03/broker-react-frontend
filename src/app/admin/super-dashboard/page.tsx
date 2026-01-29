@@ -23,6 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import type { UserRole } from "@/lib/roles";
 
 import {
   LayoutDashboard,
@@ -40,10 +41,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+
 /* ================= API ================= */
 const api = axios.create({
   baseURL: (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001") + "/api",
 });
+
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
@@ -51,11 +54,12 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+
 /* ================= PAGE ================= */
 export default function SuperAdminDashboardPage() {
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("users");
   const [loading, setLoading] = useState(true);
 
   const [admins, setAdmins] = useState<any[]>([]);
@@ -271,6 +275,7 @@ export default function SuperAdminDashboardPage() {
         { label: "Logs", value: "logs", icon: <Activity className="h-4 w-4" /> },
       ]}
     >
+
       {/* ================= OVERVIEW ================= */}
       {activeTab === "overview" && (
         <div className="space-y-6">

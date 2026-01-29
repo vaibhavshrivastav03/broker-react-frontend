@@ -5,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { ReactNode } from "react";
+import type { UserRole } from "@/lib/roles";
+
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -12,7 +14,7 @@ interface DashboardLayoutProps {
   menuItems: { label: string; value: string; icon: ReactNode }[];
   activeTab: string;
   onTabChange: (value: string) => void;
-  userRole: "admin" | "broker";
+  userRole: UserRole;
 }
 
 export function DashboardLayout({

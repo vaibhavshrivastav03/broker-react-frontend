@@ -249,7 +249,6 @@ async function handleSubmitListing() {
   fd.append("price_eur", String(formData.price_eur || ""));
   fd.append("price_gbp", String(formData.price_gbp || ""));
   fd.append("price_cad", String(formData.price_cad || ""));
-  fd.append("featured", String(formData.featured || false));
   fd.append("price_headline", String(formData.price_headline || ""));
 
   
@@ -289,12 +288,12 @@ async function handleSubmitListing() {
   fd.append("draft_max_meters", formData.draft_max_meters || "");
   fd.append("displacement2", formData.displacement2 || "");
 
-  /* ================= BUILD ================= */
-  fd.append("tower", String(formData.tower || false));
-  fd.append("builder", formData.builder || false);
-  fd.append("bridge_clearance", formData.bridge_clearance || false);
-  fd.append("holding_tank", formData.holding_tank || "");
-  fd.append("dry_weight", formData.dry_weight || "");
+  fd.append("tower", String(formData.tower ?? ""));
+  fd.append("builder", String(formData.builder ?? ""));
+  fd.append("bridge_clearance", String(formData.bridge_clearance ?? ""));
+  fd.append("holding_tank", String(formData.holding_tank ?? ""));
+  fd.append("dry_weight", String(formData.dry_weight ?? ""));
+
   fd.append("dry2_weight", formData.dry2_weight || "");
 
   /* ================= ENGINE PRIMARY ================= */
