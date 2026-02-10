@@ -38,6 +38,15 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+
+const RATES = {
+  USD: 1,
+  EUR: 0.92,
+  GBP: 0.78,
+  CAD: 1.35,
+};
+
+
 /* ================= PAGE ================= */
 
 export default function BrokerDashboardPage() {
@@ -48,6 +57,31 @@ export default function BrokerDashboardPage() {
   const [boats, setBoats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
+
+  
+  /* ================= ENGINE / GENERATOR UI CONTROL ================= */
+
+  const MAX_ENGINES = 5;
+  const MAX_GENERATORS = 3;
+
+  // Engine blocks shown in UI (0 = engine1, 1 = engine2, etc.)
+  const [engineBlocks, setEngineBlocks] = useState<number[]>([0, 1]);
+
+  // Generator blocks shown in UI
+  const [generatorBlocks, setGeneratorBlocks] = useState<number[]>([0]);
+
+  /* ================= HELPERS ================= */
+
+  const engineIndexSuffix = (i: number) => (i === 0 ? "" : `${i + 1}`);
+
+  const engineField = (i: number, field: string) =>
+    `engine${engineIndexSuffix(i)}_${field}`;
+
+  const powerHpField = (i: number) =>
+    i === 0 ? "power_hp" : `power${i + 1}_hp`;
+
+  const powerKwField = (i: number) =>
+    i === 0 ? "power_kw" : `power${i + 1}_kw`;
 
   /* ================= FORM STATE (UNCHANGED FIELDS) ================= */
 const EMPTY_FORM = {
@@ -171,7 +205,62 @@ const EMPTY_FORM = {
   jacuzzi: false,
   tender: "",
 
+  virtual_tour: "",
+  video_2: "",
+
   is_featured:false,
+
+  engine3_qty: "",
+  engine3_make: "",
+  engine3_model: "",
+  engine3_year: "",
+  drive3_type: "",
+  engine3_type: "",
+  fuel3_type: "",
+  engine3_hours: "",
+  engine3_hours_date: "",
+  engine3_location: "",
+  power3_hp: "",
+  power3_kw: "",
+
+  engine4_qty: "",
+  engine4_make: "",
+  engine4_model: "",
+  engine4_year: "",
+  drive4_type: "",
+  engine4_type: "",
+  fuel4_type: "",
+  engine4_hours: "",
+  engine4_hours_date: "",
+  engine4_location: "",
+  power4_hp: "",
+  power4_kw: "",
+
+  engine5_qty: "",
+  engine5_make: "",
+  engine5_model: "",
+  engine5_year: "",
+  drive5_type: "",
+  engine5_type: "",
+  fuel5_type: "",
+  engine5_hours: "",
+  engine5_hours_date: "",
+  engine5_location: "",
+  power5_hp: "",
+  power5_kw: "",
+
+  generator2: "",
+  generator2_make: "",
+  generator2_kw: "",
+  generator2_hours: "",
+  generator2_date_hours_recorded: "",
+
+  generator3: "",
+  generator3_make: "",
+  generator3_kw: "",
+  generator3_hours: "",
+  generator3_date_hours_recorded: "",
+
 
   /* ================= MEDIA ================= */
   pdf_brochure: "",
@@ -187,11 +276,44 @@ const [existingGallery, setExistingGallery] = useState<string[]>([]);
 const [pdfBrochure, setPdfBrochure] = useState<File | null>(null);
 const [existingPdfBrochure, setExistingPdfBrochure] = useState<string | null>(null);
 
+const [selectedCurrency, setSelectedCurrency] = useState("USD");
+
+const [virtualTour, setVirtualTour] = useState<File | null>(null);
+const [video2, setVideo2] = useState<File | null>(null);
+
+const [existingVirtualTour, setExistingVirtualTour] = useState<string | null>(null);
+const [existingVideo2, setExistingVideo2] = useState<string | null>(null);
+
+
   /* ================= LOAD DASHBOARD ================= */
 
   useEffect(() => {
     loadDashboard();
   }, []);
+
+  useEffect(() => {
+    const engines: number[] = [];
+
+    for (let i = 1; i <= 5; i++) {
+      if (formData[`engine${i === 1 ? "" : i}_make`]) {
+        engines.push(i - 1);
+      }
+    }
+
+    setEngineBlocks(engines.length ? engines : [0]);
+
+    const gens: number[] = [];
+
+    for (let i = 1; i <= 3; i++) {
+      if (formData[`generator${i === 1 ? "" : i}_make`]) {
+        gens.push(i - 1);
+      }
+    }
+
+    setGeneratorBlocks(gens.length ? gens : [0]);
+  }, [formData]);
+
+
 
   async function loadDashboard() {
     try {
@@ -215,6 +337,16 @@ const [existingPdfBrochure, setExistingPdfBrochure] = useState<string | null>(nu
     }
   }
 
+const calculatePrices = (value, currency) => {
+  const usdValue = value / RATES[currency];
+
+  return {
+    price_usd: Math.round(usdValue * RATES.USD),
+    price_eur: Math.round(usdValue * RATES.EUR),
+    price_gbp: Math.round(usdValue * RATES.GBP),
+    price_cad: Math.round(usdValue * RATES.CAD),
+  };
+};
 
 
 
@@ -345,6 +477,39 @@ async function handleSubmitListing() {
   fd.append("tender", formData.tender || "");
 
   fd.append("is_featured", String(formData.is_featured || false));
+
+  /* ================= ENGINE 3–5 (DYNAMIC) ================= */
+  for (let i = 2; i < engineBlocks.length; i++) {
+    const suffix = i + 1;
+
+    fd.append(`engine${suffix}_qty`, formData[`engine${suffix}_qty`] || "");
+    fd.append(`engine${suffix}_make`, formData[`engine${suffix}_make`] || "");
+    fd.append(`engine${suffix}_model`, formData[`engine${suffix}_model`] || "");
+    fd.append(`engine${suffix}_year`, formData[`engine${suffix}_year`] || "");
+    fd.append(`drive${suffix}_type`, formData[`drive${suffix}_type`] || "");
+    fd.append(`engine${suffix}_type`, formData[`engine${suffix}_type`] || "");
+    fd.append(`fuel${suffix}_type`, formData[`fuel${suffix}_type`] || "");
+    fd.append(`engine${suffix}_hours`, formData[`engine${suffix}_hours`] || "");
+    fd.append(`engine${suffix}_hours_date`, formData[`engine${suffix}_hours_date`] || "");
+    fd.append(`engine${suffix}_location`, formData[`engine${suffix}_location`] || "");
+    fd.append(`power${suffix}_hp`, formData[`power${suffix}_hp`] || "");
+    fd.append(`power${suffix}_kw`, formData[`power${suffix}_kw`] || "");
+  }
+
+  /* ================= GENERATOR 2–3 ================= */
+  for (let i = 1; i < generatorBlocks.length; i++) {
+    const suffix = i + 1;
+
+    fd.append(`generator${suffix}`, formData[`generator${suffix}`] || "");
+    fd.append(`generator${suffix}_make`, formData[`generator${suffix}_make`] || "");
+    fd.append(`generator${suffix}_kw`, formData[`generator${suffix}_kw`] || "");
+    fd.append(`generator${suffix}_hours`, formData[`generator${suffix}_hours`] || "");
+    fd.append(
+      `generator${suffix}_date_hours_recorded`,
+      formData[`generator${suffix}_date_hours_recorded`] || ""
+    );
+  }
+
   /* ================= MEDIA ================= */
   if(pdfBrochure){
     fd.append("pdf_brochure", pdfBrochure);
@@ -367,6 +532,15 @@ async function handleSubmitListing() {
   fd.append("user_id", String(broker.user_id));
   fd.append("status", "pending");
 
+  if (virtualTour) {
+    fd.append("virtual_tour", virtualTour);
+  }
+
+  if (video2) {
+    fd.append("video_2", video2);
+  }
+
+
   try {
     if (editingId) {
       await api.put(`/broker/listings/${editingId}`, fd, {
@@ -380,7 +554,14 @@ async function handleSubmitListing() {
       toast.success("Listing submitted");
     }
     
-   
+    // ✅ clear video states after update
+    setVirtualTour(null);
+    setVideo2(null);
+
+    setExistingVirtualTour(null);
+    setExistingVideo2(null);
+
+
     setExistingFeaturedImage(null);
     setExistingGallery([]);
     setPdfBrochure(null);
@@ -389,6 +570,7 @@ async function handleSubmitListing() {
     setFormData(EMPTY_FORM);
     setFeaturedImage(null);
     setGalleryFiles([]);
+
     setActiveTab("my-listings");
     loadDashboard();
   } catch (err) {
@@ -396,6 +578,7 @@ async function handleSubmitListing() {
     toast.error("Failed to save listing");
   }
 }
+
 
 
 
@@ -431,6 +614,7 @@ async function editListing(id: number) {
       price_gbp: data.price_gbp || "",
       price_cad: data.price_cad || "",
       price_headline: data.price_headline || "",
+      
 
       /* ===== PERFORMANCE ===== */
       cruise_speed_kn: data.cruise_speed_kn || "",
@@ -520,8 +704,80 @@ async function editListing(id: number) {
       tender: data.tender || "",
       
       is_featured: data.is_featured || false,
+      
+      /* ===== ENGINE 3 ===== */
+      engine3_qty: data.engine3_qty || "",
+      engine3_make: data.engine3_make || "",
+      engine3_model: data.engine3_model || "",
+      engine3_year: data.engine3_year || "",
+      drive3_type: data.drive3_type || "",
+      engine3_type: data.engine3_type || "",
+      fuel3_type: data.fuel3_type || "",
+      engine3_hours: data.engine3_hours || "",
+      engine3_hours_date: data.engine3_hours_date || "",
+      engine3_location: data.engine3_location || "",
+      power3_hp: data.power3_hp || "",
+      power3_kw: data.power3_kw || "",
+
+      /* ===== ENGINE 4 ===== */
+      engine4_qty: data.engine4_qty || "",
+      engine4_make: data.engine4_make || "",
+      engine4_model: data.engine4_model || "",
+      engine4_year: data.engine4_year || "",
+      drive4_type: data.drive4_type || "",
+      engine4_type: data.engine4_type || "",
+      fuel4_type: data.fuel4_type || "",
+      engine4_hours: data.engine4_hours || "",
+      engine4_hours_date: data.engine4_hours_date || "",
+      engine4_location: data.engine4_location || "",
+      power4_hp: data.power4_hp || "",
+      power4_kw: data.power4_kw || "",
+
+      /* ===== ENGINE 5 ===== */
+      engine5_qty: data.engine5_qty || "",
+      engine5_make: data.engine5_make || "",
+      engine5_model: data.engine5_model || "",
+      engine5_year: data.engine5_year || "",
+      drive5_type: data.drive5_type || "",
+      engine5_type: data.engine5_type || "",
+      fuel5_type: data.fuel5_type || "",
+      engine5_hours: data.engine5_hours || "",
+      engine5_hours_date: data.engine5_hours_date || "",
+      engine5_location: data.engine5_location || "",
+      power5_hp: data.power5_hp || "",
+      power5_kw: data.power5_kw || "",
+
+      /* ===== GENERATOR 2 ===== */
+      generator2: data.generator2 || "",
+      generator2_make: data.generator2_make || "",
+      generator2_kw: data.generator2_kw || "",
+      generator2_hours: data.generator2_hours || "",
+      generator2_date_hours_recorded:
+      data.generator2_date_hours_recorded || "",
+
+      /* ===== GENERATOR 3 ===== */
+      generator3: data.generator3 || "",
+      generator3_make: data.generator3_make || "",
+      generator3_kw: data.generator3_kw || "",
+      generator3_hours: data.generator3_hours || "",
+      generator3_date_hours_recorded: data.generator3_date_hours_recorded || "",
+
 
     });
+
+     /* ✅ SET SELECTED CURRENCY BASED ON EXISTING PRICE */
+    if (data.price_usd) setSelectedCurrency("USD");
+    else if (data.price_eur) setSelectedCurrency("EUR");
+    else if (data.price_gbp) setSelectedCurrency("GBP");
+    else if (data.price_cad) setSelectedCurrency("CAD");
+    else setSelectedCurrency("USD"); // fallback
+
+    setExistingVirtualTour(data.virtual_tour || null);
+    setExistingVideo2(data.video_2 || null);
+
+    setVirtualTour(null);
+    setVideo2(null);
+
 
     // 🔹 existing PDF from DB
     setExistingPdfBrochure(data.pdf_brochure || null);
@@ -551,7 +807,7 @@ async function editListing(id: number) {
 
 
 
-  const [copied, setCopied] = useState(false);
+const [copied, setCopied] = useState(false);
 const [newIp, setNewIp] = useState("");
 
 function copyToClipboard(text: string) {
@@ -604,6 +860,7 @@ async function deleteListing(id: number) {
   }
 }
 
+
   /* ================= RENDER ================= */
 
   if (loading || !broker) {
@@ -634,6 +891,20 @@ async function deleteListing(id: number) {
                 setEditingId(null);
                 setFormData(EMPTY_FORM);
                 setActiveTab("submit");
+
+                setExistingVirtualTour(null);
+                setExistingVideo2(null);
+
+                setVirtualTour(null);
+                setVideo2(null);
+
+                setExistingFeaturedImage(null);
+                setExistingGallery([]);
+                setPdfBrochure(null);
+                setExistingPdfBrochure(null);
+                setEditingId(null);
+                setFeaturedImage(null);
+                setGalleryFiles([]);
               }}
             >
               New Listing
@@ -711,7 +982,7 @@ async function deleteListing(id: number) {
                     onChange={e => setFormData({ ...formData, vessel_name: e.target.value })} />
 
                   <Select value={formData.type} onValueChange={v => setFormData({ ...formData, type: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Type" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="catamarans">Catamaran</SelectItem>
                       <SelectItem value="monohull">Monohull</SelectItem>
@@ -783,21 +1054,46 @@ async function deleteListing(id: number) {
             {/* ================= PRICING ================= */}
             <TabsContent value="pricing">
               <Card>
-                <CardHeader><CardTitle>Pricing</CardTitle></CardHeader>
+                <CardHeader><CardTitle>Pricing</CardTitle>
+                
+                  <p className="text-xs text-gray-500">
+                    Enter price in selected currency. Other currencies are auto-calculated.
+                  </p>
+                </CardHeader>
+                
                 <CardContent className="grid sm:grid-cols-2 gap-4">
 
-                  <Input type="number" placeholder="Price USD" value={formData.price_usd}
-                    onChange={e => setFormData({ ...formData, price_usd: e.target.value })} />
+                  <select
+                    value={selectedCurrency}
+                    onChange={(e) => setSelectedCurrency(e.target.value)}
+                    className="input"
+                  >
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                    <option value="CAD">CAD</option>
+                  </select>
 
-                  <Input type="number" placeholder="Price EUR" value={formData.price_eur}
-                    onChange={e => setFormData({ ...formData, price_eur: e.target.value })} />
+                  <Input
+                    type="number"
+                    placeholder={`Price ${selectedCurrency}`}
+                    value={formData[`price_${selectedCurrency.toLowerCase()}`] ?? ""}
+                    onChange={(e) => {
+                      const value = Number(e.target.value || 0);
+                      setFormData(prev => ({
+                        ...prev,
+                        ...calculatePrices(value, selectedCurrency),
+                      }));
+                    }}
+                  />
 
-                  <Input type="number" placeholder="Price GBP" value={formData.price_gbp}
-                    onChange={e => setFormData({ ...formData, price_gbp: e.target.value })} />
 
-                  <Input type="number" placeholder="Price CAD" value={formData.price_cad}
-                    onChange={e => setFormData({ ...formData, price_cad: e.target.value })} />
+                  <Input type="number" value={formData.price_usd ?? ""} disabled />
+                  <Input type="number" value={formData.price_eur ?? ""} disabled />
+                  <Input type="number" value={formData.price_gbp ?? ""} disabled />
+                  <Input type="number" value={formData.price_cad ?? ""} disabled />
 
+                  
                   <Input
                     className="sm:col-span-2"
                     placeholder="Price Headline (e.g. Priced to Sell)"
@@ -1009,137 +1305,261 @@ async function deleteListing(id: number) {
 
             {/* ================= ENGINES ================= */}
             <TabsContent value="engines">
-              <Card className="space-y-3 mt-5">
+              <Card className="space-y-4 mt-5">
                 <CardHeader>
                   <CardTitle>Engines</CardTitle>
-                  <CardDescription>Primary & secondary engine details</CardDescription>
+                  <CardDescription>Up to 5 engines supported</CardDescription>
                 </CardHeader>
 
-                <CardContent className="grid sm:grid-cols-2 gap-4">
+                <CardContent className="space-y-6">
+                  {engineBlocks.map((i) => (
+                    <div
+                      key={i}
+                      className="border rounded-lg p-4 grid sm:grid-cols-2 gap-4"
+                    >
+                      <h4 className="sm:col-span-2 font-semibold">
+                        Engine {i + 1}
+                      </h4>
 
-                  {/* ===== PRIMARY ENGINE ===== */}
-                  <Input placeholder="Engine Quantity"
-                    value={formData.engine_qty}
-                    onChange={e => setFormData({ ...formData, engine_qty: e.target.value })} />
+                      <Input
+                        placeholder="Engine Quantity"
+                        value={formData[engineField(i, "qty")] || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            [engineField(i, "qty")]: e.target.value,
+                          })
+                        }
+                      />
 
-                  <Input placeholder="Engine Make"
-                    value={formData.engine_make}
-                    onChange={e => setFormData({ ...formData, engine_make: e.target.value })} />
+                      <Input
+                        placeholder="Engine Make"
+                        value={formData[engineField(i, "make")] || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            [engineField(i, "make")]: e.target.value,
+                          })
+                        }
+                      />
 
-                  <Input placeholder="Engine Model"
-                    value={formData.engine_model}
-                    onChange={e => setFormData({ ...formData, engine_model: e.target.value })} />
+                      <Input
+                        placeholder="Engine Model"
+                        value={formData[engineField(i, "model")] || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            [engineField(i, "model")]: e.target.value,
+                          })
+                        }
+                      />
 
-                  <Input placeholder="Engine Year"
-                    value={formData.engine_year}
-                    onChange={e => setFormData({ ...formData, engine_year: e.target.value })} />
+                      <Input
+                        placeholder="Engine Year"
+                        value={formData[engineField(i, "year")] || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            [engineField(i, "year")]: e.target.value,
+                          })
+                        }
+                      />
 
-                  <Input placeholder="Drive Type"
-                    value={formData.drive_type}
-                    onChange={e => setFormData({ ...formData, drive_type: e.target.value })} />
+                      <Input
+                        placeholder="Drive Type"
+                        value={formData[`drive${engineIndexSuffix(i)}_type`] || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            [`drive${engineIndexSuffix(i)}_type`]: e.target.value,
+                          })
+                        }
+                      />
 
-                  <Input placeholder="Engine Type"
-                    value={formData.engine_type}
-                    onChange={e => setFormData({ ...formData, engine_type: e.target.value })} />
+                      <Input
+                        placeholder="Engine Type"
+                        value={formData[engineField(i, "type")] || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            [engineField(i, "type")]: e.target.value,
+                          })
+                        }
+                      />
 
-                  <Input placeholder="Engine Hours"
-                    value={formData.engine_hours}
-                    onChange={e => setFormData({ ...formData, engine_hours: e.target.value })} />
+                      <Input
+                        placeholder="Fuel Type"
+                        value={formData[`fuel${engineIndexSuffix(i)}_type`] || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            [`fuel${engineIndexSuffix(i)}_type`]: e.target.value,
+                          })
+                        }
+                      />
 
-                  <Input placeholder="Engine Hours Date"
-                    value={formData.engine_hours_date}
-                    onChange={e => setFormData({ ...formData, engine_hours_date: e.target.value })} />
+                      <Input
+                        placeholder="Engine Hours"
+                        value={formData[engineField(i, "hours")] || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            [engineField(i, "hours")]: e.target.value,
+                          })
+                        }
+                      />
 
-                  <Input placeholder="Engine Location"
-                    value={formData.engine_location}
-                    onChange={e => setFormData({ ...formData, engine_location: e.target.value })} />
+                      <Input
+                        placeholder="Engine Hours Date"
+                        value={formData[engineField(i, "hours_date")] || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            [engineField(i, "hours_date")]: e.target.value,
+                          })
+                        }
+                      />
 
-                  <Input placeholder="Power (HP)"
-                    value={formData.power_hp}
-                    onChange={e => setFormData({ ...formData, power_hp: e.target.value })} />
+                      <Input
+                        placeholder="Engine Location"
+                        value={formData[engineField(i, "location")] || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            [engineField(i, "location")]: e.target.value,
+                          })
+                        }
+                      />
 
-                  <Input placeholder="Power (kW)"
-                    value={formData.power_kw}
-                    onChange={e => setFormData({ ...formData, power_kw: e.target.value })} />
+                      <Input
+                        placeholder="Power (HP)"
+                        value={formData[powerHpField(i)] || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            [powerHpField(i)]: e.target.value,
+                          })
+                        }
+                      />
 
-                  {/* ===== SECOND ENGINE ===== */}
-                  <Input placeholder="Second Engine Qty"
-                    value={formData.engine2_qty}
-                    onChange={e => setFormData({ ...formData, engine2_qty: e.target.value })} />
+                      <Input
+                        placeholder="Power (kW)"
+                        value={formData[powerKwField(i)] || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            [powerKwField(i)]: e.target.value,
+                          })
+                        }
+                      />
 
-                  <Input placeholder="Second Engine Make"
-                    value={formData.engine2_make}
-                    onChange={e => setFormData({ ...formData, engine2_make: e.target.value })} />
+                      {i > 1 && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="sm:col-span-2"
+                          onClick={() =>
+                            setEngineBlocks(engineBlocks.filter((x) => x !== i))
+                          }
+                        >
+                          Remove Engine
+                        </Button>
+                      )}
+                    </div>
+                  ))}
 
-                  <Input placeholder="Second Engine Model"
-                    value={formData.engine2_model}
-                    onChange={e => setFormData({ ...formData, engine2_model: e.target.value })} />
-
-                  <Input placeholder="Second Engine Year"
-                    value={formData.engine2_year}
-                    onChange={e => setFormData({ ...formData, engine2_year: e.target.value })} />
-
-                  <Input placeholder="Drive 2 Type"
-                    value={formData.drive2_type}
-                    onChange={e => setFormData({ ...formData, drive2_type: e.target.value })} />
-
-                  <Input placeholder="Engine 2 Type"
-                    value={formData.engine2_type}
-                    onChange={e => setFormData({ ...formData, engine2_type: e.target.value })} />
-
-                  <Input placeholder="Second Engine Hours"
-                    value={formData.engine2_hours}
-                    onChange={e => setFormData({ ...formData, engine2_hours: e.target.value })} />
-
-                  <Input placeholder="Engine 2 Hours Date"
-                    value={formData.engine2_hours_date}
-                    onChange={e => setFormData({ ...formData, engine2_hours_date: e.target.value })} />
-
-                  <Input placeholder="Engine 2 location"
-                    value={formData.engine2_location}
-                    onChange={e => setFormData({ ...formData, engine2_location: e.target.value })} />
-                  
-                  <Input placeholder="Engine 2 Power(HP)"
-                    value={formData.power2_hp}
-                    onChange={e => setFormData({ ...formData, power2_hp: e.target.value })} />
-
-                  <Input placeholder="Engine 2 Power(KW)"
-                    value={formData.power2_kw}
-                    onChange={e => setFormData({ ...formData, power2_kw: e.target.value })} />
-
+                  <Button
+                    disabled={engineBlocks.length >= MAX_ENGINES}
+                    onClick={() =>
+                      setEngineBlocks([...engineBlocks, engineBlocks.length])
+                    }
+                  >
+                    + Add Engine
+                  </Button>
                 </CardContent>
               </Card>
 
-              <Card className="space-y-3 mt-5">
+              {/* ================= GENERATORS ================= */}
+              <Card className="space-y-4 mt-6">
                 <CardHeader>
-                  <CardTitle>Generator</CardTitle>
+                  <CardTitle>Generators</CardTitle>
+                  <CardDescription>Up to 3 generators supported</CardDescription>
                 </CardHeader>
 
-                <CardContent className="grid sm:grid-cols-2 gap-4">
+                <CardContent className="space-y-6">
+                  {generatorBlocks.map((i) => {
+                    const suffix = i === 0 ? "" : `${i + 1}`;
+                    return (
+                      <div
+                        key={i}
+                        className="border rounded-lg p-4 grid sm:grid-cols-2 gap-4"
+                      >
+                        <h4 className="sm:col-span-2 font-semibold">
+                          Generator {i + 1}
+                        </h4>
 
-                  <Input placeholder="Generator"
-                    value={formData.generator}
-                    onChange={e => setFormData({ ...formData, generator: e.target.value })} />
+                        <Input
+                          placeholder="Generator Make"
+                          value={formData[`generator${suffix}_make`] || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              [`generator${suffix}_make`]: e.target.value,
+                            })
+                          }
+                        />
 
-                  <Input placeholder="Generator Make"
-                    value={formData.generator_make}
-                    onChange={e => setFormData({ ...formData, generator_make: e.target.value })} />
+                        <Input
+                          placeholder="Generator kW"
+                          value={formData[`generator${suffix}_kw`] || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              [`generator${suffix}_kw`]: e.target.value,
+                            })
+                          }
+                        />
 
-                  <Input placeholder="Generator kW"
-                    value={formData.generator_kw}
-                    onChange={e => setFormData({ ...formData, generator_kw: e.target.value })} />
+                        <Input
+                          placeholder="Generator Hours"
+                          value={formData[`generator${suffix}_hours`] || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              [`generator${suffix}_hours`]: e.target.value,
+                            })
+                          }
+                        />
 
-                  <Input placeholder="Generator Hours"
-                    value={formData.generator_hours}
-                    onChange={e => setFormData({ ...formData, generator_hours: e.target.value })} />
+                        <Input
+                          placeholder="Hours Recorded Date"
+                          value={
+                            formData[`generator${suffix}_date_hours_recorded`] || ""
+                          }
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              [`generator${suffix}_date_hours_recorded`]:
+                                e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    );
+                  })}
 
-                  <Input placeholder="Hours Recorded Date"
-                    value={formData.generator_date_hours_recorded}
-                    onChange={e => setFormData({ ...formData, generator_date_hours_recorded: e.target.value })} />
-
+                  <Button
+                    disabled={generatorBlocks.length >= MAX_GENERATORS}
+                    onClick={() =>
+                      setGeneratorBlocks([...generatorBlocks, generatorBlocks.length])
+                    }
+                  >
+                    + Add Generator
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>
+
 
             {/* ================= DESIGN ================= */}
             <TabsContent value="design">
@@ -1303,6 +1723,60 @@ async function deleteListing(id: number) {
                   )}
                 </CardContent>
               </Card>
+
+              {/* ================= Virtual Tour ================= */}
+              <Card className="space-y-3 mt-5">
+                <CardHeader>
+                  <CardTitle>Virtual Tour</CardTitle>
+                  <CardDescription>Upload virtual tour</CardDescription>
+                </CardHeader>
+
+                <CardContent className="grid sm:grid-cols-2 gap-4">
+                  <Input
+                    type="file"
+                    accept="video/mp4,video/webm"
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) {
+                        setVirtualTour(e.target.files[0]);
+                      }
+                    }}
+                  />
+
+                  {existingVirtualTour && !virtualTour && (
+                    <video controls className="h-32 rounded border">
+                      <source src={existingVirtualTour} />
+                    </video>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* ================= Video ================= */}
+              <Card className="space-y-3 mt-5">
+                <CardHeader>
+                  <CardTitle>Video</CardTitle>
+                  <CardDescription>Upload video</CardDescription>
+                </CardHeader>
+
+                <CardContent className="grid sm:grid-cols-2 gap-4">
+                  <Input
+                    type="file"
+                    accept="video/mp4,video/webm"
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) {
+                        setVideo2(e.target.files[0]);
+                      }
+                    }}
+                  />
+
+                  {existingVideo2 && !video2 && (
+                    <video controls className="h-32 rounded border">
+                      <source src={existingVideo2} />
+                    </video>
+                  )}
+                </CardContent>
+              </Card>
+
+
 
             </TabsContent>
           </Tabs>
